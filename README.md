@@ -21,7 +21,8 @@ The main logic of the script is implemented in the main.py file.
 
 Here you find functions that can load the provided example data in the data folder and execute either ae-tabpfn or rf-tapfn
 
-"""
+```
 python main.py --dataset {dataset_to_be_used} --setting {ae or rf} --size {size}
-"""
+```
+
 
