@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import run_ae
-import run_rf
+from run_ae import run_ae_tabpfn
+from run_rf import run_rf_tabpfn
 from sklearn.preprocessing import normalize
 
 def load_dataset_psi_ms(data_path = "../data/PSI_MS_Raw_Urine_Frederico.csv"):
@@ -63,7 +63,12 @@ if __name__ == '__main__':
                                 help='ae or rf',
                                 required = True,
                                 type=str)
-
+    cmdline_parser.add_argument('-l', '--size',
+                                default="",
+                                help='latent or input size',
+                                required = True,
+                                type=int)
+                                
     args, unknowns = cmdline_parser.parse_known_args()
     
     if args.dataset == "psi-ms":
@@ -72,6 +77,11 @@ if __name__ == '__main__':
         X,y = load_dataset2()
         
     X = normalize(X)
+    
+    if args.setting == "rf":
+        run_rf_tabpfn(X, y, args.size)
+    elif: args.setting == "ae":
+        run_ae_tabpfn(X, y, args.size)
     
     
     
