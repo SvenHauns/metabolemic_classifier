@@ -4,6 +4,7 @@ import pandas as pd
 from run_ae import run_ae_tabpfn
 from run_rf import run_rf_tabpfn
 from sklearn.preprocessing import normalize
+import argparse
 
 def load_dataset_psi_ms(data_path = "../data/PSI_MS_Raw_Urine_Frederico.csv"):
 
@@ -73,14 +74,14 @@ if __name__ == '__main__':
     
     if args.dataset == "psi-ms":
         X,y = load_dataset_psi_ms()
-    elif: args.dataset == "psi":
+    elif args.dataset == "psi":
         X,y = load_dataset2()
         
     X = normalize(X)
     
     if args.setting == "rf":
         run_rf_tabpfn(X, y, args.size)
-    elif: args.setting == "ae":
+    elif args.setting == "ae":
         run_ae_tabpfn(X, y, args.size)
     
     
