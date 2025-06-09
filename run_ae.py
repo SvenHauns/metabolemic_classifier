@@ -200,6 +200,7 @@ def run_ae_tabpfn(X,y,hidden_size):
         y_test = y[test_index]
 
         tensor_x_train = torch.Tensor(np.array(X_train))
+        print(y_train)
         tensor_y_train = torch.Tensor(y_train).float()
     
     

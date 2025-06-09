@@ -6,7 +6,7 @@ from run_rf import run_rf_tabpfn
 from sklearn.preprocessing import normalize
 import argparse
 
-def load_dataset_psi_ms(data_path = "../data/PSI_MS_Raw_Urine_Frederico.csv"):
+def load_dataset_psi_ms(data_path = "./data/PSI_MS_Raw_Urine_Frederico.csv"):
 
     dataset = pd.read_csv(data_path)
     column_select = [c for c in dataset.columns if c not in ['Sample','']]
@@ -18,7 +18,7 @@ def load_dataset_psi_ms(data_path = "../data/PSI_MS_Raw_Urine_Frederico.csv"):
 
     x_dataset = dataset.values
     y_list = [0 if a == "Control" else 1 for a in list(labels.values)]
-    y_list_or = y_list
+
 
     x_dataset_or = []
     for dataline in x_dataset:
@@ -26,11 +26,27 @@ def load_dataset_psi_ms(data_path = "../data/PSI_MS_Raw_Urine_Frederico.csv"):
         x_dataset_or.append(dataline2)
     
     
-    return np.array(x_dataset_or), np.array(labels)
+    return np.array(x_dataset_or), np.array(y_list)
+    
+    
+def load_custom_dataset(datapath):
 
-def load_dataset2(data_path = "../data/D-new2.csv"):
+    dataset = pd.read_csv(data_path)
+    X_data = []
+    y_data = []
+        
+    for column in list(df.columns):
+        y = df[column][1]
+        X = np.array(df[column][2:])
+        y_data.append(int(y))
+        X_data.append(X)
+        
+    return np.array(y_data), np.array(X_data)
+    
 
-    df = pd.read_csv()
+def load_dataset2(data_path = "./data/D-new2.csv"):
+
+    df = pd.read_csv(data_path)
     X_data = []
     y_data = []
         
@@ -72,10 +88,12 @@ if __name__ == '__main__':
                                 
     args, unknowns = cmdline_parser.parse_known_args()
     
-    if args.dataset == "psi-ms":
+    if args.dataset == "PSI-MS":
         X,y = load_dataset_psi_ms()
-    elif args.dataset == "psi":
+    elif args.dataset == "FI-TWIM-MS":
         X,y = load_dataset2()
+    elif:
+        X,y = load_custom_dataset(args.dataset)
         
     X = normalize(X)
     

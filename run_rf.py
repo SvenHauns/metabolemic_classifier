@@ -114,10 +114,10 @@ def run_rf_tabpfn(X, y, input_size):
     print(f1_dict)
     
     print("precision")
-    print(precision)
+    print(precision_dict)
     
     print("recall")
-    print(recall)
+    print(recall_dict)
     
     print("ROC")
     print(roc)
