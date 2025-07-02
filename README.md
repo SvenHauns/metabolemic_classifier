@@ -5,7 +5,7 @@ TabPFN based classifier for processing and classification of highly-dimensional 
 
 The current script uses two methods to pre-compute features for TabPFN, both improving the classification accuracy.
 
-The first one use a random forest model to pre-select important features based on the contribution on the change to the entropy. The second makes use of a small autoencoder to reduce the redundancy in the data. 
+The first one use a random forest model to pre-select important features based on the contribution on the change to the entropy. The second makes use of a small autoencoder to reduce the redundancy in the data before classification. 
 
 
 ### Installation
