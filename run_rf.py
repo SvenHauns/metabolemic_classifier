@@ -14,12 +14,16 @@ import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 
 
-np.random.seed(32)
+os.environ["PYTHONHASHSEED"] = "32"  # stable hashing affects set/dict orders
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"  # or ":4096:8"
 random.seed(32)
-torch.manual_seed(32)   
-torch.cuda.manual_seed(32)        
+np.random.seed(32)
+torch.manual_seed(32)
+torch.cuda.manual_seed_all(32)   # not just manual_seed
+torch.use_deterministic_algorithms(True)  # raises if a nondeterministic op is used
 torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False                        
+torch.backends.cudnn.benchmark = False
+torch.set_float32_matmul_precision("high")  # avoid "medium"/TF32 variability                            
 
 
 def get_loo_splits(X, y):
