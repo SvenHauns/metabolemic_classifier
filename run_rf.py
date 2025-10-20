@@ -26,12 +26,12 @@ torch.backends.cudnn.benchmark = False
 torch.set_float32_matmul_precision("high")  # avoid "medium"/TF32 variability                            
 
 
-def get_loo_splits(X, y):
+def get_kfold_splits(X, y):
 
-    loo = LeaveOneOut()
-    loo.get_n_splits(X)
+
+    loo = StratifiedKFold(n_splits=10, shuffle=True, random_state = 32)
     
-    splits = [(train_index, test_index) for train_index, test_index in loo.split(X)]
+    splits = [(train_index, test_index) for train_index, test_index in loo.split(X, y)]
     
     importances_list = []
     
@@ -50,7 +50,7 @@ def run_rf_tabpfn(X, y, input_size):
 
 
 
-    splits, importances_list = get_loo_splits(X, y)
+    splits, importances_list = get_kfold_splits(X, y)
 
     loo = LeaveOneOut()
     loo.get_n_splits(X)

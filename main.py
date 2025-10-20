@@ -114,19 +114,25 @@ if __name__ == '__main__':
     
     if args.dataset == "PSI-MS":
         X,y = load_dataset_psi_ms()
+        lrdisc = 0.0001
+        batch_size = 31
     elif args.dataset == "FI-TWIM-MS":
         X,y = load_dataset2()
+        lrdisc = 0.0001
+        batch_size = 32
     elif args.dataset == "breast-cancer":
         X,y = read_breast_cancer()
+        lrdisc = 1.0
+        batch_size = 32
     else:
         X,y = load_custom_dataset(args.dataset)
-        
+        batch_size = 32
     X = normalize(X)
     
     if args.setting == "rf":
         run_rf_tabpfn(X, y, args.size)
     elif args.setting == "ae":
-        run_ae_tabpfn(X, y, args.size)
+        run_ae_tabpfn(X, y, args.size, class_discount = lrdisc, batch_size = batch_size)
     
     
     

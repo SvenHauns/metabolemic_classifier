@@ -78,7 +78,7 @@ class AutoEncoder(nn.Module):
         
         return out, out1
 
-def train_ae_conditional(model, model_classification, train_loader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer,optimizer_classifier, device, num_epochs=10):
+def train_ae_conditional(model, model_classification, train_loader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer,optimizer_classifier, device, num_epochs=10, class_discount =  0.0001, batch_size = batch_size):
 
     max_acc = 0
     epoch_accuracy_full = 0
@@ -112,7 +112,7 @@ def train_ae_conditional(model, model_classification, train_loader,tensor_x_test
             predicted = (classification > 0.5).float()
             correct_predictions += (predicted == labels.unsqueeze(1)).sum().item()
             total_predictions += labels.size(0)
-            total_loss = loss + loss_classification 
+            total_loss = loss + loss_classification * class_discount
             
             
             total_loss.backward()  
@@ -131,7 +131,7 @@ def train_ae_conditional(model, model_classification, train_loader,tensor_x_test
         
         _, projection_test = model(tensor_x_test.to(device))     
         my_dataset = MyDataset(projection_test,tensor_y_test) # create your datset
-        my_dataloader_test = DataLoader(my_dataset, batch_size=32, shuffle = False) # create your dataloader
+        my_dataloader_test = DataLoader(my_dataset, batch_size=batch_size, shuffle = False) # create your dataloader
         
         accuracy = test(model_classification, my_dataloader_test, device)
         accuracy_list.append(accuracy)
@@ -156,25 +156,25 @@ class MyDataset(Dataset):
     
     def __len__(self):
         return len(self.data)
-        
-def get_loo_splits(X, y):
 
-
-    loo = LeaveOneOut()
-    loo.get_n_splits(X)
     
-    splits = [(train_index, test_index) for train_index, test_index in loo.split(X)]
+def get_kfold_splits(X, y):
+
+
+    loo = StratifiedKFold(n_splits=10, shuffle=True, random_state = 32)
+    #loo.get_n_splits(X)
+    
+    splits = [(train_index, test_index) for train_index, test_index in loo.split(X, y)]
     
     importances_list = []
     
+
     return splits, importances_list
+
+
+def run_ae_tabpfn(X,y,hidden_size, class_discount, batch_size):
     
-
-
-
-def run_ae_tabpfn(X,y,hidden_size):
-    
-    splits, importances_list = get_loo_splits(X, y)
+    splits, importances_list = get_kfold_splits(X, y)
 
     size_dict = {}
     prediction_dict = {}
@@ -226,9 +226,9 @@ def run_ae_tabpfn(X,y,hidden_size):
         sampler = torch.utils.data.sampler.WeightedRandomSampler(sample_weights, len(sample_weights))
         
         my_dataset = MyDataset(tensor_x_train,tensor_y_train) 
-        my_dataloader = DataLoader(my_dataset, batch_size=32, shuffle = False, sampler = sampler) 
+        my_dataloader = DataLoader(my_dataset, batch_size=batch_size, shuffle = False, sampler = sampler) 
         
-        accuracy, accuracy_list, train_acc_list, reconstruction_loss, model = train_ae_conditional(autoencoder, lstm_classifier, my_dataloader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer_ae,optimizer_classification, device, num_epochs=100)
+        accuracy, accuracy_list, train_acc_list, reconstruction_loss, model = train_ae_conditional(autoencoder, lstm_classifier, my_dataloader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer_ae,optimizer_classification, device, num_epochs=100, class_discount = class_discount, batch_size = batch_size)
         
         autoencoder.eval()
         with torch.no_grad():
