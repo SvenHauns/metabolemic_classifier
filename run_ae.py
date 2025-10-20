@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 import numpy as np
 from sklearn.preprocessing import normalize
-from sklearn.model_selection import LeaveOneOut
+from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 import random
 from sklearn.ensemble import RandomForestClassifier
 import torch
@@ -12,7 +12,7 @@ import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
-
+import os
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 os.environ["PYTHONHASHSEED"] = "32"  # stable hashing affects set/dict orders
@@ -78,7 +78,7 @@ class AutoEncoder(nn.Module):
         
         return out, out1
 
-def train_ae_conditional(model, model_classification, train_loader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer,optimizer_classifier, device, num_epochs=10, class_discount =  0.0001, batch_size = batch_size):
+def train_ae_conditional(model, model_classification, train_loader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer,optimizer_classifier, device, num_epochs=10, class_discount =  0.0001, batch_size = 32):
 
     max_acc = 0
     epoch_accuracy_full = 0
@@ -204,7 +204,6 @@ def run_ae_tabpfn(X,y,hidden_size, class_discount, batch_size):
         y_test = y[test_index]
 
         tensor_x_train = torch.Tensor(np.array(X_train))
-        print(y_train)
         tensor_y_train = torch.Tensor(y_train).float()
     
     
@@ -219,14 +218,9 @@ def run_ae_tabpfn(X,y,hidden_size, class_discount, batch_size):
         criterion = nn.MSELoss()
         criterion_classification = nn.BCEWithLogitsLoss()
         
-        class_sample_count = np.bincount(y_train)  
-        class_weights = 1. / class_sample_count  
-        sample_weights = np.array([class_weights[int(label)] for label in y_train])
-        sample_weights = torch.Tensor(sample_weights)
-        sampler = torch.utils.data.sampler.WeightedRandomSampler(sample_weights, len(sample_weights))
         
         my_dataset = MyDataset(tensor_x_train,tensor_y_train) 
-        my_dataloader = DataLoader(my_dataset, batch_size=batch_size, shuffle = False, sampler = sampler) 
+        my_dataloader = DataLoader(my_dataset, batch_size=batch_size, shuffle = True) 
         
         accuracy, accuracy_list, train_acc_list, reconstruction_loss, model = train_ae_conditional(autoencoder, lstm_classifier, my_dataloader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer_ae,optimizer_classification, device, num_epochs=100, class_discount = class_discount, batch_size = batch_size)
         

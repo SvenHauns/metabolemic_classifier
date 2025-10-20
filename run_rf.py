@@ -7,12 +7,12 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 import numpy as np
 from sklearn.preprocessing import normalize
-from sklearn.model_selection import LeaveOneOut
+from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 import random
 from sklearn.ensemble import RandomForestClassifier
 import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
-
+import os
 
 os.environ["PYTHONHASHSEED"] = "32"  # stable hashing affects set/dict orders
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"  # or ":4096:8"
@@ -68,10 +68,6 @@ def run_rf_tabpfn(X, y, input_size):
     
     for enum, (train_index, test_index) in enumerate(splits):
 
-        print(f"  Train: index={train_index}")
-        print(f"  Test:  index={test_index}")
-
-    
         X_train = X[train_index]
         y_train = y[train_index]
     
@@ -95,7 +91,6 @@ def run_rf_tabpfn(X, y, input_size):
         # Predict labels
         predictions = clf.predict(tensor_x_test)
         prob = clf.predict_proba(tensor_x_test)
-        print("Accuracy", accuracy_score(tensor_y_test, predictions))
         
     
         score = accuracy_score(tensor_y_test, predictions)
