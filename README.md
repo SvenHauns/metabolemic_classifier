@@ -25,4 +25,6 @@ Here you find functions that can load the provided example data in the data fold
 python main.py --dataset {dataset_to_be_used} --setting {ae or rf} --size {size}
 ```
 
+### Evaluation
 
+Hyperparameter optimization of tabpfn input values and baseline models can be found in optimization. 

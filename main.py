@@ -29,6 +29,30 @@ def load_dataset_psi_ms(data_path = "./data/PSI_MS_Raw_Urine_Frederico.csv"):
     return np.array(x_dataset_or), np.array(y_list)
     
     
+def read_breast_cancer():
+
+    
+    dataset = pd.read_csv("../data/1995_0_data_set_7861791_ry39wp_model_construction.csv")
+    y_list = list(dataset["Label"])
+    y_list_or = y_list
+    column_select = [c for c in dataset.columns if c not in ['Patient ID', 'Label']]
+    datast2 = dataset[column_select]
+    x_dataset_or = datast2.values
+
+
+
+    dataset2 = pd.read_csv("../data/1995_0_data_set_7861792_ry39hp_to_validate.csv")
+    y_list = list(dataset2["Label"])
+    column_select = [c for c in dataset.columns if c not in ['Patient ID', 'Label', 'Acquired Date']]
+    dataset2 = dataset2[column_select]
+    x_dataset = dataset2.values
+    x_dataset_or = list(x_dataset_or)
+    x_dataset_or.extend(x_dataset)
+    y_list_or.extend(y_list)
+
+
+    return np.array(x_dataset_or), np.array(y_list_or)
+    
 def load_custom_dataset(datapath):
 
     dataset = pd.read_csv(data_path)
@@ -92,7 +116,9 @@ if __name__ == '__main__':
         X,y = load_dataset_psi_ms()
     elif args.dataset == "FI-TWIM-MS":
         X,y = load_dataset2()
-    elif:
+    elif args.dataset == "breast-cancer":
+        X,y = read_breast_cancer()
+    else:
         X,y = load_custom_dataset(args.dataset)
         
     X = normalize(X)
