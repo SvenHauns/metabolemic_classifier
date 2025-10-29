@@ -127,6 +127,7 @@ if __name__ == '__main__':
     else:
         X,y = load_custom_dataset(args.dataset)
         batch_size = 32
+        lrdisc = 0.0001
     X = normalize(X)
     
     if args.setting == "rf":
