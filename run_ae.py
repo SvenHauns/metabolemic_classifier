@@ -78,7 +78,7 @@ class AutoEncoder(nn.Module):
         
         return out, out1
 
-def train_ae_conditional(model, model_classification, train_loader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer,optimizer_classifier, device, num_epochs=10, class_discount =  0.0001, batch_size = 32):
+def train_ae_conditional(model, model_classification, train_loader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer,optimizer_classifier, device, num_epochs=10, class_discount =  0.0001, batch_size = 32, test = True):
 
     max_acc = 0
     epoch_accuracy_full = 0
@@ -127,14 +127,16 @@ def train_ae_conditional(model, model_classification, train_loader,tensor_x_test
         train_acc_list.append(epoch_accuracy)
         reconstruction_loss.append(loss.item())
 
-        model.eval()
+
+        if test == True:
+            model.eval()
         
-        _, projection_test = model(tensor_x_test.to(device))     
-        my_dataset = MyDataset(projection_test,tensor_y_test) # create your datset
-        my_dataloader_test = DataLoader(my_dataset, batch_size=batch_size, shuffle = False) # create your dataloader
+            _, projection_test = model(tensor_x_test.to(device))     
+            my_dataset = MyDataset(projection_test,tensor_y_test) # create your datset
+            my_dataloader_test = DataLoader(my_dataset, batch_size=batch_size, shuffle = False) # create your dataloader
         
-        accuracy = test(model_classification, my_dataloader_test, device)
-        accuracy_list.append(accuracy)
+            accuracy = test(model_classification, my_dataloader_test, device)
+            accuracy_list.append(accuracy)
 
     return accuracy, accuracy_list, train_acc_list, reconstruction_loss, model
     
@@ -171,6 +173,39 @@ def get_kfold_splits(X, y):
 
     return splits, importances_list
 
+def train_predict_ae(X_train,y_train, X_test, hidden_size, class_discount, batch_size):
+
+    tensor_x_train = torch.Tensor(np.array(X_train))
+    tensor_y_train = torch.Tensor(y_train).float()
+        
+    tensor_x_test = torch.Tensor(np.array(X_test))
+
+
+    autoencoder = AutoEncoder(input_size, hidden_size).to(device)
+    lstm_classifier = LSTMBinaryClassifier(hidden_size, hidden_size, num_layers=1).to(device)
+    optimizer_ae = torch.optim.Adam(autoencoder.parameters(), lr=0.001) 
+    optimizer_classification = torch.optim.Adam(lstm_classifier.parameters(), lr=0.001) 
+    criterion = nn.MSELoss()
+    criterion_classification = nn.BCEWithLogitsLoss()
+        
+        
+    my_dataset = MyDataset(tensor_x_train,tensor_y_train) 
+    my_dataloader = DataLoader(my_dataset, batch_size=batch_size, shuffle = True) 
+        
+    accuracy, accuracy_list, train_acc_list, reconstruction_loss, model = train_ae_conditional(autoencoder, lstm_classifier, my_dataloader,tensor_x_test, None, criterion, criterion_classification, optimizer_ae,optimizer_classification, device, num_epochs=100, class_discount = class_discount, batch_size = batch_size, test = False)
+        
+    autoencoder.eval()
+    with torch.no_grad():
+        _,  tensor_x_train = autoencoder(tensor_x_train.to(device))
+        _, tensor_x_test = autoencoder(tensor_x_test.to(device))
+
+    # Initialize a classifier
+    clf = TabPFNClassifier()
+    clf.fit(tensor_x_train.cpu().detach(), tensor_y_train.cpu())
+    predictions_prob = clf.predict_proba(tensor_x_test.cpu().detach())
+    predictions = clf.predict(tensor_x_test.cpu().detach())
+    
+    return predictions, predictions_prob
 
 def run_ae_tabpfn(X,y,hidden_size, class_discount, batch_size):
     

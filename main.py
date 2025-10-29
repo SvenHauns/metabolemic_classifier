@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from run_ae import run_ae_tabpfn
-from run_rf import run_rf_tabpfn
+from run_ae import run_ae_tabpfn, train_predict_ae
+from run_rf import run_rf_tabpfn, train_predict_rf
 from sklearn.preprocessing import normalize
 import argparse
 
@@ -53,11 +53,12 @@ def read_breast_cancer():
 
     return np.array(x_dataset_or), np.array(y_list_or)
     
-def load_custom_dataset(datapath):
+def load_custom_dataset(datapath, test_file = None):
 
     dataset = pd.read_csv(data_path)
     X_data = []
     y_data = []
+    X_test = []
         
     for column in list(df.columns):
         y = df[column][1]
@@ -65,7 +66,16 @@ def load_custom_dataset(datapath):
         y_data.append(int(y))
         X_data.append(X)
         
-    return np.array(y_data), np.array(X_data)
+    if test_file != None:
+        test_dataset = pd.read_csv(data_path)
+        
+        for column in list(df.columns):
+            X = np.array(df[column][2:])
+            X_test.append(X)
+        
+    return np.array(y_data), np.array(X_data), np.array(X_test)
+    
+    
     
 
 def load_dataset2(data_path = "./data/D-new2.csv"):
@@ -109,6 +119,22 @@ if __name__ == '__main__':
                                 help='latent or input size',
                                 required = True,
                                 type=int)
+    cmdline_parser.add_argument('-t', '--test_dataset',
+                                default=None,
+                                help='path to test dataset',
+                                required = False,
+                                type=str)
+    cmdline_parser.add_argument('-p', '--predict',
+                                default=False,
+                                help='set to prediction mode',
+                                required = False,
+                                type=bool)
+    cmdline_parser.add_argument('-t', '--save_prediction',
+                                default="prediction.csv",
+                                help='path to prediction csv',
+                                required = False,
+                                type=str)
+                                
                                 
     args, unknowns = cmdline_parser.parse_known_args()
     
@@ -125,15 +151,23 @@ if __name__ == '__main__':
         lrdisc = 1.0
         batch_size = 32
     else:
-        X,y = load_custom_dataset(args.dataset)
+        X,y, x_test = load_custom_dataset(args.dataset, args.test_dataset)
         batch_size = 32
         lrdisc = 0.0001
+        x_test = normalize(x_test)
+        
     X = normalize(X)
     
     if args.setting == "rf":
-        run_rf_tabpfn(X, y, args.size)
+        if predict == False: run_rf_tabpfn(X, y, args.size)
+        else: 
+            labels, pred = train_predict_rf(X, y, x_test, args.size)
+            df = pd.DataFrame({"prediction":pred, "labels": labels})
+            df.to_csv(args.save_prediction)
+        
     elif args.setting == "ae":
-        run_ae_tabpfn(X, y, args.size, class_discount = lrdisc, batch_size = batch_size)
-    
-    
-    
+        if predict == False: run_ae_tabpfn(X, y, args.size, class_discount = lrdisc, batch_size = batch_size)
+        else:
+            labels, pred = train_predict_ae(X, y, x_test, args.size, class_discount = lrdisc, batch_size = batch_size)
+            df = pd.DataFrame({"prediction":pred, "labels": labels})
+            df.to_csv(args.save_prediction)

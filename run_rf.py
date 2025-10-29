@@ -45,6 +45,37 @@ def get_kfold_splits(X, y):
 
     return splits, importances_list
 
+def train_predict_rf(X_train,y_train, X_test, hidden_size):
+
+    tensor_x_train = torch.Tensor(np.array(X_train))
+    tensor_y_train = torch.Tensor(y_train).float()
+        
+    tensor_x_test = torch.Tensor(np.array(X_test))
+    
+    rf = RandomForestClassifier(n_estimators = 1000)
+    rf.fit(np.array(X)[train_idx], np.array(y)[train_idx])
+    importances = rf.feature_importances_
+    
+    improtance_indece = np.argsort(importances)[-input_size:]
+            
+    tensor_x_train = torch.Tensor(np.array(X_train)[:, improtance_indece]) # transform to torch tensor
+    tensor_y_train = torch.Tensor(y_train).float()
+    
+    
+    tensor_x_test = torch.Tensor(np.array(X_test)[:, improtance_indece]) # transform to torch tensor
+    tensor_y_test = torch.Tensor(y_test).float()
+        
+    # Initialize a classifier
+    clf = TabPFNClassifier()
+    clf.fit(tensor_x_train, tensor_y_train)
+
+    # Predict labels
+    predictions = clf.predict(tensor_x_test)
+    prob = clf.predict_proba(tensor_x_test)
+
+    
+    return predictions, prob
+    
 
 def run_rf_tabpfn(X, y, input_size):
 
