@@ -49,22 +49,17 @@ def train_predict_rf(X_train,y_train, X_test, hidden_size):
 
     tensor_x_train = torch.Tensor(np.array(X_train))
     tensor_y_train = torch.Tensor(y_train).float()
-        
     tensor_x_test = torch.Tensor(np.array(X_test))
     
     rf = RandomForestClassifier(n_estimators = 1000)
-    rf.fit(np.array(X)[train_idx], np.array(y)[train_idx])
+    rf.fit(np.array(X_train), np.array(y_train))
     importances = rf.feature_importances_
-    
-    improtance_indece = np.argsort(importances)[-input_size:]
+    improtance_indece = np.argsort(importances)[-hidden_size:]
             
     tensor_x_train = torch.Tensor(np.array(X_train)[:, improtance_indece]) # transform to torch tensor
     tensor_y_train = torch.Tensor(y_train).float()
-    
-    
     tensor_x_test = torch.Tensor(np.array(X_test)[:, improtance_indece]) # transform to torch tensor
-    tensor_y_test = torch.Tensor(y_test).float()
-        
+
     # Initialize a classifier
     clf = TabPFNClassifier()
     clf.fit(tensor_x_train, tensor_y_train)
@@ -130,7 +125,7 @@ def run_rf_tabpfn(X, y, input_size):
         average_prediction.append(score)
         prediction_list.extend(predictions)
         label_list.extend(tensor_y_test.cpu())
-        proba_list.append(prob[0])
+
         
         
     size_dict[input_size] = np.mean(average_prediction)
@@ -138,6 +133,7 @@ def run_rf_tabpfn(X, y, input_size):
     f1_dict[input_size] = f1_score(label_list, prediction_list, average="weighted")
     precision_dict[input_size] = precision_score(label_list, prediction_list, average="weighted")
     recall_dict[input_size] = recall_score(label_list, prediction_list, average="weighted")
+
     roc[input_size] = roc_auc_score(label_list, np.array(proba_list)[:,1])
     
     print("F1-Loss")

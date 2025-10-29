@@ -78,7 +78,7 @@ class AutoEncoder(nn.Module):
         
         return out, out1
 
-def train_ae_conditional(model, model_classification, train_loader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer,optimizer_classifier, device, num_epochs=10, class_discount =  0.0001, batch_size = 32, test = True):
+def train_ae_conditional(model, model_classification, train_loader,tensor_x_test, tensor_y_test, criterion, criterion_classification, optimizer,optimizer_classifier, device, num_epochs=10, class_discount =  0.0001, batch_size = 32, testing = True):
 
     max_acc = 0
     epoch_accuracy_full = 0
@@ -127,8 +127,8 @@ def train_ae_conditional(model, model_classification, train_loader,tensor_x_test
         train_acc_list.append(epoch_accuracy)
         reconstruction_loss.append(loss.item())
 
-
-        if test == True:
+        accuracy = None
+        if testing == True:
             model.eval()
         
             _, projection_test = model(tensor_x_test.to(device))     
@@ -179,8 +179,9 @@ def train_predict_ae(X_train,y_train, X_test, hidden_size, class_discount, batch
     tensor_y_train = torch.Tensor(y_train).float()
         
     tensor_x_test = torch.Tensor(np.array(X_test))
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-
+    input_size = np.shape(X_train)[1]
     autoencoder = AutoEncoder(input_size, hidden_size).to(device)
     lstm_classifier = LSTMBinaryClassifier(hidden_size, hidden_size, num_layers=1).to(device)
     optimizer_ae = torch.optim.Adam(autoencoder.parameters(), lr=0.001) 
@@ -192,7 +193,7 @@ def train_predict_ae(X_train,y_train, X_test, hidden_size, class_discount, batch
     my_dataset = MyDataset(tensor_x_train,tensor_y_train) 
     my_dataloader = DataLoader(my_dataset, batch_size=batch_size, shuffle = True) 
         
-    accuracy, accuracy_list, train_acc_list, reconstruction_loss, model = train_ae_conditional(autoencoder, lstm_classifier, my_dataloader,tensor_x_test, None, criterion, criterion_classification, optimizer_ae,optimizer_classification, device, num_epochs=100, class_discount = class_discount, batch_size = batch_size, test = False)
+    accuracy, accuracy_list, train_acc_list, reconstruction_loss, model = train_ae_conditional(autoencoder, lstm_classifier, my_dataloader,tensor_x_test, None, criterion, criterion_classification, optimizer_ae,optimizer_classification, device, num_epochs=100, class_discount = class_discount, batch_size = batch_size, testing = False)
         
     autoencoder.eval()
     with torch.no_grad():

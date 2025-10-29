@@ -6,6 +6,7 @@ from run_rf import run_rf_tabpfn, train_predict_rf
 from sklearn.preprocessing import normalize
 import argparse
 
+
 def load_dataset_psi_ms(data_path = "./data/PSI_MS_Raw_Urine_Frederico.csv"):
 
     dataset = pd.read_csv(data_path)
@@ -55,25 +56,23 @@ def read_breast_cancer():
     
 def load_custom_dataset(datapath, test_file = None):
 
-    dataset = pd.read_csv(data_path)
+    df = pd.read_csv(datapath)
     X_data = []
     y_data = []
     X_test = []
-        
-    for column in list(df.columns):
-        y = df[column][1]
-        X = np.array(df[column][2:])
-        y_data.append(int(y))
-        X_data.append(X)
-        
+    
+
+    y_data = df[df.columns[0]]
+    df = df.drop(df.columns[0], axis=1)
+    for index, row in df.iterrows():
+        X_data.append(row.values)
+    
     if test_file != None:
-        test_dataset = pd.read_csv(data_path)
-        
-        for column in list(df.columns):
-            X = np.array(df[column][2:])
-            X_test.append(X)
-        
-    return np.array(y_data), np.array(X_data), np.array(X_test)
+        test_dataset = pd.read_csv(datapath)
+        for index, row in df.iterrows():
+            X_test.append(row.values)
+
+    return np.array(X_data),  np.array(y_data), np.array(X_test)
     
     
     
@@ -129,7 +128,7 @@ if __name__ == '__main__':
                                 help='set to prediction mode',
                                 required = False,
                                 type=bool)
-    cmdline_parser.add_argument('-t', '--save_prediction',
+    cmdline_parser.add_argument('-z', '--save_prediction',
                                 default="prediction.csv",
                                 help='path to prediction csv',
                                 required = False,
@@ -154,20 +153,20 @@ if __name__ == '__main__':
         X,y, x_test = load_custom_dataset(args.dataset, args.test_dataset)
         batch_size = 32
         lrdisc = 0.0001
-        x_test = normalize(x_test)
+        if args.test_dataset != None: x_test = normalize(x_test)
         
     X = normalize(X)
     
     if args.setting == "rf":
-        if predict == False: run_rf_tabpfn(X, y, args.size)
+        if args.predict == False: run_rf_tabpfn(X, y, args.size)
         else: 
             labels, pred = train_predict_rf(X, y, x_test, args.size)
-            df = pd.DataFrame({"prediction":pred, "labels": labels})
+            df = pd.DataFrame({"class 0":pred[:,0],"class 1": pred[:,1], "labels": labels})
             df.to_csv(args.save_prediction)
         
     elif args.setting == "ae":
-        if predict == False: run_ae_tabpfn(X, y, args.size, class_discount = lrdisc, batch_size = batch_size)
+        if args.predict == False: run_ae_tabpfn(X, y, args.size, class_discount = lrdisc, batch_size = batch_size)
         else:
             labels, pred = train_predict_ae(X, y, x_test, args.size, class_discount = lrdisc, batch_size = batch_size)
-            df = pd.DataFrame({"prediction":pred, "labels": labels})
+            df = pd.DataFrame({"class 0":pred[:,0],"class 1": pred[:,1], "labels": labels})
             df.to_csv(args.save_prediction)
