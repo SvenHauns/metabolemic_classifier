@@ -1,6 +1,6 @@
 # AE-TABPFN RF-TABPFN
 
-TabPFN based classifier for processing and classification of highly-dimensional metabolemic data
+TabPFN based classifier for processing and classification of highly-dimensional metabolomic data
 
 
 The current script uses two methods to pre-compute features for TabPFN, both improving the classification accuracy.
